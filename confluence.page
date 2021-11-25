@@ -1,0 +1,103 @@
+<div>
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username">
+<br></br>
+    <label for="pass">Password:</label>
+    <input type="password" id="password" name="password" required>
+<br></br>
+<input type="button" id="dwn-btn" value="Generated Servers.xml"/>
+</div>
+
+<script language="javascript"> 
+theUrl="https://onemedhokway.medhokapps.com/display/ITOPS/Enhanced+AWS+Server+List";
+
+function csvJSON(csv){
+
+  var lines=csv.split("\n");
+
+  var result = [];
+
+  // NOTE: If your columns contain commas in their values, you'll need
+  // to deal with those before doing the next step 
+  // (you might convert them to &&& or something, then covert them back later)
+  // jsfiddle showing the issue https://jsfiddle.net/
+  var headers=lines[0].split(",");
+
+  for(var i=1;i<lines.length;i++){
+
+      var obj = {};
+      var currentline=lines[i].split(",");
+
+      for(var j=0;j<headers.length;j++){
+          obj[headers[j]] = currentline[j];
+      }
+
+      result.push(obj);
+
+  }
+
+  //return result; //JavaScript object
+  return JSON.stringify(result); //JSON
+}
+function httpGet(theUrl)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+    xmlHttp.send( null );
+    return xmlHttp.responseText;
+}
+ 
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+document.getElementById("dwn-btn").addEventListener("click", function(){
+var username = document.getElementById("username").value;
+var password = document.getElementById("password").value;
+
+var serverlist = httpGet(theUrl);
+var serverlist = serverlist.substr(serverlist.search("<p>This is an automatically generated page. If you need changes to this page, contact the Infrastructure Automation team.</p>"));
+var serverlist = serverlist.substr(0,serverlist.search("\n"));
+var serverlist = serverlist.substr(serverlist.search('<h2 id="EnhancedAWSServerList'));
+let t = 0
+serverlist = serverlist.replace(/<thead(.*?)<\/thead>/gi, match => ++t > 1 ? '' : match); 
+serverlist = serverlist.replace(/<h2(.*?)<\/h2>/gi, ''); 
+serverlist = serverlist.replace(/<\/tr>/g, '\n');
+serverlist = serverlist.replace(/<\/th>/g, ',');
+serverlist = serverlist.replace(/<\/td>/g, ',');
+serverlist = serverlist.replace(/<[^>]+>/g, '');
+serverlist = serverlist.replaceAll(",\n", '\n');
+serverlist = serverlist.replace(/\n$/, '')
+serverlist = csvJSON (serverlist);
+serverlist = JSON.parse(serverlist);
+//serverlist = OBJtoXML(serverlist);
+//serverlist = '<?xml version="1.0" encoding="UTF-8"?>\n<Servers>\n<Putty>\n' + //serverlist + '</Node>\n</Putty>\n';
+
+ 
+for (var i = 0; i < serverlist.length; i++) {
+  var jsonData = serverlist[i];
+//  console.log(jsonData.'Public IP');
+ 
+var DisplayName = jsonData['Name'] + ' (' +jsonData['Public IP'] + ')';
+var ServerName = jsonData['Public IP'];
+var CLParams = jsonData['Public IP'] + ' -l ' + username + ' -ssh -pw ' + password;
+  console.log(DisplayName + '\n' + ServerName + '\n' + CLParams + '\n');
+}
+ 
+ 
+ 
+    var text = serverlist;
+    var filename = "Servers.xml";
+    
+    download(filename, text);
+}, false);
+</script> 
