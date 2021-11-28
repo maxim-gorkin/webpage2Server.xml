@@ -60,10 +60,22 @@ function download(filename, text) {
     document.body.removeChild(element);
 }
 
+
+
 document.getElementById("dwn-btn").addEventListener("click", function(){
 var username = document.getElementById("username").value;
 var password = document.getElementById("password").value;
 
+/////////XML BUILD step1
+var doc = document.implementation.createDocument("", "", null);
+var ServersElement = doc.createElement("Servers");
+var Ins = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
+doc.insertBefore(Ins, doc.ServersElement);var PuttyElement = doc.createElement("Putty");
+
+//var Node0Element = doc.createElement("Node");
+//Node0Element.setAttribute("Type", "0");
+/////////XML BUILD step1 end
+ 
 var serverlist = httpGet(theUrl);
 var serverlist = serverlist.substr(serverlist.search("<p>This is an automatically generated page. If you need changes to this page, contact the Infrastructure Automation team.</p>"));
 var serverlist = serverlist.substr(0,serverlist.search("\n"));
@@ -79,25 +91,126 @@ serverlist = serverlist.replaceAll(",\n", '\n');
 serverlist = serverlist.replace(/\n$/, '')
 serverlist = csvJSON (serverlist);
 serverlist = JSON.parse(serverlist);
-//serverlist = OBJtoXML(serverlist);
-//serverlist = '<?xml version="1.0" encoding="UTF-8"?>\n<Servers>\n<Putty>\n' + //serverlist + '</Node>\n</Putty>\n';
 
- 
+var ClientCreated = "";
+var Node0ElementCl = 0;
 for (var i = 0; i < serverlist.length; i++) {
-  var jsonData = serverlist[i];
-//  console.log(jsonData.'Public IP');
+var jsonData = serverlist[i]; 
  
+var Client = jsonData['Client'];
+ 
+if (ClientCreated != Client) {
+		if (Node0ElementCl != 0) {
+		PuttyElement.appendChild(Node0Element);
+	}
+	var Node0Element = doc.createElement("Node");
+	Node0Element.setAttribute("Type", "0");
+	var DisplayName0Element = doc.createElement("DisplayName");
+	DisplayName0ElementText = doc.createTextNode(Client);
+	DisplayName0Element.appendChild(DisplayName0ElementText);
+	Node0Element.appendChild(DisplayName0Element);
+	ClientCreated = Client;
+	Node0ElementCl = 1;
+	}
+ 
+if (jsonData['Environment'].replace(/\s/g, '').toUpperCase() === 'PROD')
+{ var SavedSession = 'Prod'; 
+} else
+{ var SavedSession = 'Default Settings'; 
+}
 var DisplayName = jsonData['Name'] + ' (' +jsonData['Public IP'] + ')';
+if (jsonData['Platform'].toUpperCase() === 'CP' || jsonData['Platform'].toUpperCase() === 'MP'){
+DisplayName = DisplayName + ' (' +jsonData['Platform'] + ')';
+}
 var ServerName = jsonData['Public IP'];
+var PuttyConType = 4;
+var Port = 0;
+var UserName = username;
+var Password = password;
+var PasswordDelay = 0;
 var CLParams = jsonData['Public IP'] + ' -l ' + username + ' -ssh -pw ' + password;
-  console.log(DisplayName + '\n' + ServerName + '\n' + CLParams + '\n');
+var ScriptDelay = 0;
+
+//console.log(SavedSession + '\n' + DisplayName + '\n' + ServerName + '\n' + PuttyConType + '\n' + Port + '\n' + UserName + '\n' + Password + '\n' + PasswordDelay + '\n' + CLParams + '\n' + ScriptDelay + '\n' + xmlout + '\n');
+
+
+
+/////////
+ 
+var Node1Element = doc.createElement("Node");
+Node1Element.setAttribute("Type", "1");
+
+var SavedSessionElement = doc.createElement("SavedSession");
+var SavedSessionElementText  = doc.createTextNode(SavedSession);
+SavedSessionElement.appendChild(SavedSessionElementText);
+Node1Element.appendChild(SavedSessionElement);
+
+var DisplayName1Element = doc.createElement("DisplayName");
+var DisplayName1ElementText  = doc.createTextNode(DisplayName);
+DisplayName1Element.appendChild(DisplayName1ElementText);
+Node1Element.appendChild(DisplayName1Element);
+
+var ServerNameElement = doc.createElement("ServerName");
+var ServerNameElementtText  = doc.createTextNode(ServerName);
+ServerNameElement.appendChild(ServerNameElementtText);
+Node1Element.appendChild(ServerNameElement);
+
+var PuttyConTypeElement = doc.createElement("PuttyConType");
+var PuttyConTypeElementText  = doc.createTextNode(PuttyConType);
+PuttyConTypeElement.appendChild(PuttyConTypeElementText);
+Node1Element.appendChild(PuttyConTypeElement);
+
+var PortElement = doc.createElement("Port");
+var PortElementText  = doc.createTextNode(Port);
+PortElement.appendChild(PortElementText);
+Node1Element.appendChild(PortElement);
+
+var UserNameElement = doc.createElement("UserName");
+var UserNameElementText  = doc.createTextNode(UserName);
+UserNameElement.appendChild(UserNameElementText);
+Node1Element.appendChild(UserNameElement);
+
+var PasswordElement = doc.createElement("Password");
+var PasswordElementText  = doc.createTextNode(Password);
+PasswordElement.appendChild(PasswordElementText);
+Node1Element.appendChild(PasswordElement);
+
+var PasswordDelayElement = doc.createElement("PasswordDelay");
+var PasswordDelayElementText  = doc.createTextNode(PasswordDelay);
+PasswordDelayElement.appendChild(PasswordDelayElementText);
+Node1Element.appendChild(PasswordDelayElement);
+
+var CLParamsElement = doc.createElement("CLParams");
+var CLParamsElementText  = doc.createTextNode(CLParams);
+CLParamsElement.appendChild(CLParamsElementText);
+Node1Element.appendChild(CLParamsElement);
+
+var ScriptDelayElement = doc.createElement("ScriptDelay");
+var ScriptDelayElementText  = doc.createTextNode(ScriptDelay);
+ScriptDelayElement.appendChild(ScriptDelayElementText);
+Node1Element.appendChild(ScriptDelayElement);
+
+Node0Element.appendChild(Node1Element);
 }
  
  
+//// XML BUILD Step 3
+
+//PuttyElement.appendChild(Node0Element);
+ServersElement.appendChild(PuttyElement);
+doc.appendChild(ServersElement);
  
-    var text = serverlist;
-    var filename = "Servers.xml";
+ 
+console.log(doc);
+
+let xml = new XMLSerializer().serializeToString(doc);
+ 
+var text = xml;
+var filename = "Servers.xml";
     
-    download(filename, text);
+download(filename, text);
+var ClientCreated = "";
+var Node0ElementCl = 0;
 }, false);
+
 </script> 
