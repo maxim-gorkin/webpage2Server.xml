@@ -5,11 +5,13 @@
     <label for="pass">SSH Password:</label>
     <input type="password" id="password" name="password" required>
 <br></br>
+<label for="pass">Include Windows/DocX servers:</label>
+<input id="windows" name="windows" type="checkbox"/>
+<br></br>
 <input type="button" id="mtputtyfile" value="Generate MTPuTTY-import.xml"/>
 </div>
 
 <script language="javascript"> 
-
 function csvJSON(csv) {
     var lines = csv.split("\n");
     var result = [];
@@ -90,6 +92,10 @@ document.getElementById("mtputtyfile").addEventListener("click", function () {
     var PuttyElement = doc.createElement("Putty");
     for (var i = 0; i < serverlisttoxml.length; i++) {
         var jsonData = serverlisttoxml[i];
+        if ((jsonData['Name'].toUpperCase().includes("WINDOWS") || jsonData['Name'].toUpperCase().includes("DOCX")) && document.getElementById("windows").checked == false)
+ {
+// do nothing
+ } else {
         var Client = jsonData['Client'];
         if (ClientCreated != Client) {
             if (Node0ElementCl != 0) {
@@ -183,6 +189,7 @@ document.getElementById("mtputtyfile").addEventListener("click", function () {
 
         Node0Element.appendChild(Node1Element);
         ServersConverted = ServersConverted + 1;
+}
     }
     ServersElement.appendChild(PuttyElement);
     doc.appendChild(ServersElement);
